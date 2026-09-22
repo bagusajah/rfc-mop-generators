@@ -1,0 +1,41 @@
+# Backend image — Fastify + docxtemplater (stateless: no database).
+# Build context MUST be the repo root.
+#
+# Multi-app: build with --buildarg APP=rfc (default) to select which app's
+# backend to bundle. Each app ships its own server.js + template + prompts.
+#
+# Deps are installed at /app via npm workspaces (root package.json) so the
+# hoisted /app/node_modules is an ancestor of BOTH /app/apps/<app>/backend
+# (server.js) AND /app/packages/core/backend (createDocApp.js, llm.js, …) —
+# core's bare imports (fastify, pizzip, …) resolve from there.
+FROM node:20-bookworm-slim
+ARG APP=rfc
+
+WORKDIR /app
+
+# 1. Copy the root workspace manifest + every workspace's package manifest,
+#    then install. Doing this before the source copy means dep installs are
+#    cached across code-only changes (the common case).
+COPY package.json package-lock.json* ./
+COPY apps/$APP/backend/package.json apps/$APP/backend/package-lock.json* apps/$APP/backend/
+
+# Install production deps at /app (hoisted). --workspace triggers the root
+# workspace install; --omit=dev keeps the image lean. The workspace name is
+# ${APP}-backend (rfc-backend / mop-backend) per each app's package.json.
+RUN npm install --omit=dev --workspace ${APP}-backend
+
+# 2. Copy source: the shared core + the app (backend + schema dir). Layout
+#    mirrors the repo so the deep relative imports resolve as in dev.
+COPY packages/core/ /app/packages/core/
+COPY apps/$APP/ /app/apps/$APP/
+
+# 3. Google OAuth tokens live in one JSON file on the mounted volume so they
+#    survive container recreation. Set via environment in compose.
+ENV TOKENS_PATH=/data/gtokens.json
+
+EXPOSE 3001
+
+# Run server.js from the app backend dir so __dirname-relative paths (template,
+# fixtures, corpus) and the ../.. relative imports resolve as in dev.
+WORKDIR /app/apps/$APP/backend
+CMD ["node", "server.js"]

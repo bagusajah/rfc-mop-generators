@@ -1,0 +1,33 @@
+node_modules/
+dist/
+# Local AI/editor tool state (machine-specific).
+.zcode/
+.claude/
+*.db
+*.db-journal
+.env
+.DS_Store
+__pycache__/
+*.pyc
+
+# Historical RFC source documents (signed PDFs + tracker with real names/PII).
+# Kept local-only; the import pipeline reads from here but they are not committed.
+RFC/*.pdf
+RFC/*.xlsx
+RFC/imported/
+
+RFC/corpus/
+
+# Same for MOP: bulk-imported historical MOPs (real names) stay local-only.
+MOP/corpus/
+
+# Company IT Policy source PDFs + extracted text (internal, local-only).
+policy/pdfs/
+policy/parsed/
+# Per-browser Google OAuth tokens (dev-mode file store).
+apps/*/backend/gtokens.json
+# LLM provider config incl. API keys (dev-mode file store, see llm-config.js).
+apps/*/backend/llm-config.json
+
+# Local compose overrides (e.g. pointing at an external qdrant).
+docker-compose.override.yml

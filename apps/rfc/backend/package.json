@@ -1,0 +1,29 @@
+{
+  "name": "rfc-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "template": "python3 ../../../tools/apply_template.py",
+    "template:check": "python3 ../../../tools/apply_template.py --check rfc_template.docx",
+    "fixture:check": "node check-fixture.mjs",
+    "review:check": "node check-review.mjs",
+    "tracker": "python3 ../../../tools/read_tracker.py",
+    "parse": "python3 ../../../tools/parse_pdf.py",
+    "import": "node scripts/import-rfcs.js",
+    "import:all": "npm run tracker && npm run parse && npm run import",
+    "seed": "node scripts/seed-vector.js",
+    "policy:parse": "python3 ../../../tools/parse_policy_pdf.py",
+    "policy:ingest": "node scripts/ingest-policy.js",
+    "policy:all": "npm run policy:parse && npm run policy:ingest"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "ajv": "^8.17.1",
+    "docxtemplater": "^3.50.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^5.1.0",
+    "pizzip": "^3.1.7"
+  }
+}

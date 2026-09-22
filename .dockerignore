@@ -1,0 +1,26 @@
+# Keep build contexts lean and avoid leaking local deps/secrets into images.
+**/node_modules
+**/dist
+**/*.db
+**/*.db-journal
+**/.env
+**/.env.*
+!.env.example
+.git
+.gitignore
+.claude
+**/.DS_Store
+README.md
+
+# Data directories not needed at runtime.
+RFC/
+MOP/
+policy/
+tools/
+
+# Sensitive config JSONs (API keys, OAuth tokens).
+backend/llm-config.json
+backend/gtokens.json
+
+# Local tooling state.
+.zcode/

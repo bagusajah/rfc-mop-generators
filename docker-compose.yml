@@ -1,0 +1,146 @@
+# Monorepo: two stateless doc-generator apps (RFC + MOP) sharing a domain-neutral
+# core + an optional vector store. Each app is its own backend+frontend pair on
+# its own host port; qdrant + ollama are shared.
+#
+# Single-origin topology per app: nginx serves the built SPA and reverse-proxies
+# /api/ to that app's backend. Backends are internal (no host port).
+#
+# Both apps are stateless by design: no database, no record tracking. The only
+# persistent state is per-browser Google OAuth tokens + LLM provider config, on
+# the named volumes.
+#
+# Usage:
+#   docker compose build
+#   docker compose up -d
+#   open http://localhost:8080   # RFC
+#   open http://localhost:8081   # MOP
+#
+# Copy apps/<app>/backend/.env.example → apps/<app>/backend/.env and set LLM_* /
+# GOOGLE_* before up. For Google OAuth, set
+# GOOGLE_REDIRECT_URI=https://<public-origin>/api/google/callback.
+#
+# Vector store (optional): the shared `qdrant` + `ollama` services improve the AI
+# draft/review grounding via semantic search over the historical corpora. Enabled
+# per app when QDRANT_URL is set in its .env (the compose `environment:` blocks
+# default it to the bundled qdrant). Prefer your own Qdrant instance or another
+# vector store? Point QDRANT_URL at it in apps/<app>/backend/.env and drop the
+# QDRANT_URL line from this file's backend `environment:` blocks (or override
+# via docker-compose.override.yml), then skip the bundled service:
+#   docker compose up -d --scale qdrant=0
+# One-time setup after first up:
+#   docker compose exec ollama ollama pull bge-m3
+#   cd apps/rfc/backend && npm run seed   # embed RFC corpus into Qdrant
+
+services:
+  # ── RFC app ──
+  rfc-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        - APP=rfc
+    env_file:
+      - apps/rfc/backend/.env
+    environment:
+      - TOKENS_PATH=/data/gtokens.json        # per-browser Google OAuth tokens
+      - LLM_CONFIG_PATH=/data/llm-config.json # provider config incl. API keys
+      - QDRANT_URL=http://qdrant:6333
+      - EMBED_BASE_URL=http://ollama:11434/v1
+      - EMBED_API_KEY=ollama
+      - EMBED_MODEL=bge-m3
+    volumes:
+      - rfc-data:/data
+      # Historical RFC examples for AI grounding. Mounted under /app because the
+      # backend resolves <repo>/RFC/corpus relative to its own dir, which in the
+      # image is /app/apps/rfc/backend → /app/RFC/corpus.
+      - ./RFC/corpus:/app/RFC/corpus:ro
+    expose:
+      - "3001"
+    depends_on:
+      - qdrant
+      - ollama
+    restart: unless-stopped
+
+  rfc-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - APP=rfc
+        - BACKEND_HOST=rfc-backend
+    ports:
+      - "8080:80"
+    depends_on:
+      - rfc-backend
+    restart: unless-stopped
+
+  # ── MOP app ──
+  mop-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        - APP=mop
+    env_file:
+      - apps/mop/backend/.env
+    environment:
+      - TOKENS_PATH=/data/gtokens.json
+      - LLM_CONFIG_PATH=/data/llm-config.json
+      - QDRANT_URL=http://qdrant:6333
+      - EMBED_BASE_URL=http://ollama:11434/v1
+      - EMBED_API_KEY=ollama
+      - EMBED_MODEL=bge-m3
+    volumes:
+      - mop-data:/data
+      # Historical MOP examples (dir may not exist yet — created by a future
+      # import). Same /app-relative resolution as the RFC corpus mount.
+      - ./MOP/corpus:/app/MOP/corpus:ro
+    expose:
+      - "3001"
+    depends_on:
+      - qdrant
+      - ollama
+    restart: unless-stopped
+
+  mop-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - APP=mop
+        - BACKEND_HOST=mop-backend
+    ports:
+      - "8081:80"
+    depends_on:
+      - mop-backend
+    restart: unless-stopped
+
+  # ── Vector store (shared by both apps) ──
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant-data:/qdrant/storage
+    expose:
+      - "6333"
+    ports:
+      - "6333:6333"   # Qdrant dashboard / REST — reachable from host for seeding
+    restart: unless-stopped
+
+  # ── Embedding model (self-hosted, multilingual bge-m3) ──
+  # One-time pull after first start: docker compose exec ollama ollama pull bge-m3
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-models:/root/.ollama
+    expose:
+      - "11434"
+    ports:
+      - "11434:11434"   # reachable from host for seeding (bge-m3 embeddings)
+    # For GPU acceleration, see: https://hub.docker.com/r/ollama/ollama
+    restart: unless-stopped
+
+volumes:
+  rfc-data:
+  mop-data:
+  qdrant-data:
+  ollama-models:

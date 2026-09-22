@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Method of Procedure — MOP Generator</title>
+    <script>
+      // App localStorage namespace — MUST be set here (before the module graph
+      // evaluates) because localStore.js / use-theme.js read it at import time,
+      // which happens before any statement in main.jsx runs.
+      globalThis.__APP_PREFIX__ = "mop.";
+      // Apply the saved/preferred theme before paint to avoid a flash.
+      // Key is namespaced per app (matches packages/core/frontend/use-theme.js).
+      (function () {
+        try {
+          var stored = localStorage.getItem("mop.theme");
+          var dark = stored === "dark"
+            || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) document.documentElement.classList.add("dark");
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root" style="max-width: var(--app-max-width); margin: 0 auto; padding: var(--app-pad);"></div>
+    <script type="module" src="/main.jsx"></script>
+  </body>
+</html>

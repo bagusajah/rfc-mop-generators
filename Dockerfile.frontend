@@ -1,0 +1,49 @@
+# Frontend image — multi-stage.
+# Build stage: compile the Vite SPA. Runtime stage: nginx serves the static
+# dist and reverse-proxies /api/ to the backend service.
+#
+# Multi-app: build with --buildarg APP=rfc (default) to select which app's
+# frontend to bundle. The app's frontend dir is the Vite root (index.html +
+# main.jsx live there); the shared core is copied alongside so the
+# ../../packages/core/frontend/... imports resolve.
+#
+# Deps are installed at /app via npm workspaces (root package.json) so the
+# hoisted /app/node_modules serves both the app frontend AND packages/core/
+# frontend — Vite/Rollup resolve core's bare imports (react, lucide-react)
+# from there, exactly as in dev.
+
+# ── build ──
+FROM node:20-alpine AS build
+ARG APP=rfc
+
+WORKDIR /app
+
+# Copy manifests first for cache: root workspace + the app frontend. The
+# workspace name is ${APP}-frontend (rfc-frontend / mop-frontend) per each
+# app's package.json.
+COPY package.json package-lock.json* ./
+COPY apps/$APP/frontend/package.json apps/$APP/frontend/package-lock.json* apps/$APP/frontend/
+
+RUN npm install --workspace ${APP}-frontend
+
+# App frontend (index.html, main.jsx, form) + shared core + the app's schema
+# (apps/$APP/$APP-schema.js, imported by the frontend via ../$APP-schema.js),
+# mirroring the repo layout so the deep relative imports resolve as in dev.
+COPY packages/core/ /app/packages/core/
+COPY apps/$APP/frontend/ /app/apps/$APP/frontend/
+COPY apps/$APP/$APP-schema.js /app/apps/$APP/$APP-schema.js
+
+WORKDIR /app/apps/$APP/frontend
+RUN npm run build
+
+# ── runtime ──
+# nginx:alpine's entrypoint runs envsubst on /etc/nginx/templates/*.template at
+# startup, substituting env vars ($BACKEND_HOST) into the config — so each app's
+# frontend proxies /api/ to its own backend service without a per-app nginx.conf.
+FROM nginx:alpine
+ARG APP=rfc
+ARG BACKEND_HOST=backend
+ENV BACKEND_HOST=$BACKEND_HOST
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY --from=build /app/apps/$APP/frontend/dist /usr/share/nginx/html
+EXPOSE 80

@@ -1,0 +1,66 @@
+{
+  "id": "example-compute-provisioning",
+  "ticket": "FRM/IT/PPD/0626/015",
+  "system": "Cloud Compute",
+  "title": "Form Permintaan Perubahan - Penambahan Instance Compute untuk Instalasi Aplikasi Pelaporan",
+  "changeType": "Migration / provisioning",
+  "description": "Aktivitas ini merupakan penambahan 1 (satu) instance compute baru pada lingkungan produksi cloud yang akan digunakan untuk instalasi aplikasi pelaporan.",
+  "before": "",
+  "after": "1 instance compute (16 vCPU / 128 GB RAM / 600 GB / Windows Server 2022)",
+  "executor": "Engineer SRE 1",
+  "requester": "IT Operations",
+  "execDate": "2026-06-26",
+  "status": "Approved",
+  "urgensi": "Medium",
+  "tujuan": "Instalasi aplikasi pelaporan dilakukan dalam rangka Proof of Concept (POC) untuk mengevaluasi kesesuaian solusi terhadap kebutuhan pelaporan, mencakup aspek fungsionalitas, kemudahan integrasi dengan sistem internal, akurasi dan validasi data, keamanan informasi, serta kesiapan operasional sebelum implementasi penuh di lingkungan produksi.",
+  "jadwal_hari": "Jumat",
+  "jadwal_jam": "11:00 - 12:45",
+  "jadwal_estimasi": "95 Menit",
+  "jadwal_downtime": "Tidak ada downtime (instance baru, tidak mengubah instance eksisting)",
+  "jadwal_pulih": "12:45",
+  "sistem_terpengaruh": "",
+  "komponen": ["Compute Instance", "Security Group"],
+  "risks": [
+    { "risiko": "Salah pemilihan spesifikasi server", "likelihood": "Low", "impact": "Low", "risk_level": "Low" },
+    { "risiko": "Salah penempatan zona", "likelihood": "Low", "impact": "Low", "risk_level": "Low" },
+    { "risiko": "Pembukaan port yang tidak sesuai", "likelihood": "Low", "impact": "Low", "risk_level": "Low" }
+  ],
+  "mitigasi": "Validasi requirement saat tahap persiapan pengerjaan.",
+  "klasifikasi": "Minor",
+  "sec_requirements": [
+    { "status": "Dapat Dipenuhi", "reason": "" },
+    { "status": "Dapat Dipenuhi", "reason": "" },
+    { "status": "Dapat Dipenuhi", "reason": "" },
+    { "status": "Dapat Dipenuhi", "reason": "" },
+    { "status": "Tidak Dapat Dipenuhi", "reason": "dikarenakan OS Windows" },
+    { "status": "Dapat Dipenuhi", "reason": "" },
+    { "status": "Tidak Relevan", "reason": "karena aplikasi tidak diekspos ke jaringan publik" }
+  ],
+  "tasks": [
+    { "phase": "Pengecekan Awal/Persiapan", "waktu": "11:00-11:10", "pengerjaan": "Validasi konfigurasi berupa spesifikasi server, port yang dibuka, penempatan vpc/network.", "pic": "Engineer SRE 1" },
+    { "phase": "Pengecekan Awal/Persiapan", "waktu": "11:10-11:10", "pengerjaan": "Login ke konsol cloud.", "pic": "Engineer SRE 1" },
+    { "phase": "Pengerjaan Inti", "waktu": "11:10-11:30", "pengerjaan": "Membuat 1 instance compute dengan spesifikasi 16 core CPU, 128 GB RAM, 600 GB storage, OS Windows Server 2022 Datacenter Edition 64bit.", "pic": "Engineer SRE 1" },
+    { "phase": "Pengerjaan Inti", "waktu": "11:30-11:40", "pengerjaan": "Membuat security group baru dan mengasosiasikan dengan instance yang baru dibuat (Port 3389 dari jumpserver-prod01).", "pic": "Engineer SRE 1" },
+    { "phase": "Pengerjaan Inti", "waktu": "11:40-11:50", "pengerjaan": "Mendaftarkan instance yang baru dibuat ke Jumpserver.", "pic": "Engineer SRE 1" },
+    { "phase": "Approval", "waktu": "11:50-12:05", "pengerjaan": "Approval — Go/No Go.", "pic": "Manager SRE" },
+    { "phase": "Review/Evaluasi", "waktu": "12:05-12:20", "pengerjaan": "Review/Evaluasi — memastikan instance sesuai spesifikasi dan port pada security group sesuai kebutuhan.", "pic": "Engineer SRE 2" },
+    { "phase": "Testing + Capture Evidence", "waktu": "12:30-12:45", "pengerjaan": "Melakukan capture evidence setelah pembuatan instance.", "pic": "Engineer SRE 1" }
+  ],
+  "rollback": [
+    { "phase": "Pengerjaan Inti", "waktu": "12:20-12:30", "pengerjaan": "Menghapus instance dan security group yang baru saja dibuat.", "pic": "Engineer SRE 1" },
+    { "phase": "Testing + Capture Evidence", "waktu": "12:30-12:45", "pengerjaan": "Melakukan capture evidence setelah penghapusan instance.", "pic": "Engineer SRE 1" }
+  ],
+  "alasan_pengecualian": "-",
+  "compensating_control": "-",
+  "prepared_title": "IT Senior Site Reliability Engineer",
+  "reviewers": [
+    { "name": "Engineer SRE 2", "title": "Act. IT Operations & SRE Manager" },
+    { "name": "Engineer Governance 1", "title": "Act. IT Governance & Security Manager" }
+  ],
+  "approvers": [
+    { "name": "Manager SRE", "title": "Head of Information & Digital Technology" },
+    { "name": "Engineer Governance 2", "title": "Head of IT Governance & Security" }
+  ],
+  "createdAt": "2026-06-25T02:00:00Z",
+  "updatedAt": "2026-06-26T05:00:00Z"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "rfc-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*/frontend",
+    "apps/*/backend"
+  ],
+  "scripts": {
+    "build:rfc": "npm --workspace rfc-frontend run build",
+    "build:mop": "npm --workspace mop-frontend run build"
+  }
+}

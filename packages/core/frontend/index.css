@@ -1,0 +1,261 @@
+/* Enterprise Blue theme (DESIGN.md): headline/body/mono typefaces. CDN import
+   degrades gracefully — if blocked (offline, proxy), --font-sans/--font-mono
+   fall back to the system stack below, so this never breaks rendering. */
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────────────────────────────────
+   DESIGN TOKENS
+   Single source of truth for color + layout. Consumed two ways:
+     1. Inline styles in App.jsx via JS constants (INK, WARN_BG, CELL_PAD…).
+     2. Tailwind utilities via tailwind.config.js (bg-card, rounded-md, …).
+   Theme-variant primitives (--ink/--muted/--surface/…) have .dark overrides.
+   Status/semantic colors are mostly FIXED across themes (dark text on light
+   pastel reads correctly in both themes) — that holds for small self-contained
+   chips (bg+fg pairs like --warn-bg/--warn-fg, --success-bg/--success-fg).
+   It does NOT hold for full-bleed panel washes (--success-panel/--warn-panel
+   + their --*-border) or for status text placed directly on a themed surface
+   (--success-ink) — those DO have .dark overrides, since a fixed light wash
+   behind theme-variant text (or fixed dark text on a themed dark surface)
+   loses contrast once the surrounding page goes dark. Layout tokens are fixed
+   across themes and live in :root only.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Theme-variant primitives (overridden in .dark) ── */
+  --ink: #1e293b;
+  --muted: #64748b;
+  --faint: #74736c;
+  --line: #e2e8f0;
+  --accent: #2563eb;
+  --accent-disabled: #93b4ef;
+  --on-accent-disabled: #ffffff;
+  --surface: #f7f9fb;
+  --card: #ffffff;
+  --input-bg: #ffffff;
+  --hover: #eef2f7;
+  --google: #1a73e8;
+
+  /* ── Status / semantic colors (fixed across themes) ── */
+  --on-accent: #ffffff;
+
+  --neutral-bg: #f1efe8;
+  --neutral-fg: #5f5e5a;
+  --neutral-dot: #888780;
+
+  --warn-bg: #faeeda;
+  --warn-fg: #854f0b;
+  --warn-dot: #ef9f27;
+  --warn-border: #ebd9b0;
+  --warn-panel: #fbf6ec;
+
+  --info-bg: #e6f1fb;
+  --info-fg: #0c447c;
+  --info-dot: #378add;
+  --info-border: #bcd8ef;
+  --info-panel: #f0f7fc;
+
+  --success-bg: #e1f5ee;
+  --success-panel: #f0faf5;
+  --success-border: #bfe3d3;
+  --success-fg: #0f6e56;
+  --success-icon: #1d9e75;
+  /* Same green as --success-fg, but theme-variant: for success-colored TEXT
+     placed directly on a themed surface (--card/--surface), not inside a
+     fixed-bg chip. --success-fg stays fixed for the chip case. */
+  --success-ink: #0f6e56;
+
+  --danger: #e24b4a;            /* icon / dot / asterisk shade */
+  --danger-bg: #fcebeb;
+  --danger-bg-strong: #feeceb;
+  --danger-fg: #791f1f;
+  --danger-fg-strong: #a32d2d;
+  --danger-border: #f3c6c5;
+  --danger-panel: #fdf4f4;
+
+  --tag-bg: #eeedfe;
+  --tag-fg: #3c3489;
+
+  --team-dba: #0f6e56;          /* team-sre reuses --accent */
+
+  /* ── Layout (fixed across themes) ── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-pill: 9999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --cell-pad: 8px 12px;         /* table / grid cell */
+  --cell-pad-sm: 6px 8px;
+  --input-pad: 4px 8px;
+
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-base: 14px;
+  --fs-lg: 15px;
+  --fs-xl: 16px;
+  --fs-2xl: 24px;
+
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  --border-w: 1px;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Headline-scale text only (app title, form title) — everything else stays
+     on --font-sans per DESIGN.md's own "Inter for functional/body text". */
+  --font-display: 'Hanken Grotesk', var(--font-sans);
+
+  --app-max-width: 1040px;
+  --app-pad: 24px;
+  --control-h: 32px;
+
+  --transition-fast: 120ms ease;
+}
+
+.dark {
+  /* Only the theme-variant primitives flip; status/layout tokens stay fixed.
+     --on-accent flips too: it's the foreground on the accent fill, so it must
+     contrast with whichever --accent is active. GitHub Dark-inspired: cool
+     near-black surface, blue accent (vs. the old warm charcoal/periwinkle). */
+  --ink: #e6edf3;
+  --muted: #8b949e;
+  --faint: #6e7681;
+  --line: #30363d;
+  --accent: #4c8dff;
+  /* Disabled must read as LESS prominent than the enabled accent — in dark
+     mode that means dimmer/desaturated, not lighter (a light fill would look
+     more clickable than the enabled button). */
+  --accent-disabled: #1f3a63;
+  --on-accent-disabled: #6e88b3;
+  --on-accent: #ffffff;
+  --surface: #0d1117;
+  --card: #161b22;
+  --input-bg: #0d1117;
+  --hover: #21262d;
+  --google: #8ab4f8;
+
+  /* Panel washes and on-surface status text: kept close to --card's lightness
+     so they read as part of the dark UI instead of a light box floating on
+     it (see the ReviewPanel dark-mode fix). Chip tokens (--success-bg/-fg
+     etc.) are untouched — those stay fixed, self-contained pairs. */
+  --warn-panel: #241f16;
+  --warn-border: #5c4423;
+  --success-panel: #16221c;
+  --success-border: #2f6a55;
+  --success-ink: #5dcaa5;
+  --danger-panel: #2b1618;
+  --danger-border: #6e2b2b;
+  --info-panel: #131b26;
+  --info-border: #2d4a63;
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* Smooth theme transitions + a baseline for interactive elements. */
+button {
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+              color var(--transition-fast), filter var(--transition-fast);
+}
+
+/* Generic hover/press feedback for every button (#most CTAs are custom
+   inline-styled, so a color-based :hover rule can't reach them — brightness
+   filter works regardless of each button's own background/text colors). */
+button:not(:disabled):hover  { filter: brightness(1.08); }
+button:not(:disabled):active { filter: brightness(0.94); }
+
+/* The only native form control in an otherwise fully themed form — match the
+   brand accent instead of the browser default. */
+input[type="radio"] { accent-color: var(--accent); }
+
+/* Visible keyboard focus for every interactive control. Form inputs set
+   `outline-none` (Tailwind) to drop the default ring; restore a themed one for
+   keyboard users only (:focus-visible) so a11y isn't lost. WCAG 2.4.7. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ── Layout helpers ────────────────────────────────────────────────────── */
+
+/* Horizontal scroll wrapper for tables on narrow screens (#4).
+   max/min-width keep fixed-min-width table content from widening the page on
+   narrow viewports — the wrapper scrolls instead. */
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; min-width: 0; }
+/* Always-visible scroll affordance — the default OS scrollbar is too faint to
+   notice that clipped table columns (security grid, tasklist, sign-off rows)
+   can be scrolled to on narrow screens. */
+.scroll-x { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.scroll-x::-webkit-scrollbar { height: 6px; }
+.scroll-x::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+/* Sticky bar with themed backdrop (#1, #3). Near-opaque: at 92% the form text
+   scrolling underneath bled through and made the bar's own labels hard to read. */
+.sticky-bar {
+  position: sticky;
+  z-index: 10;
+  background: color-mix(in srgb, var(--surface) 97%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+/* Table row hover for the dashboard list. */
+.row-hover:hover { background: var(--hover); }
+
+/* Loading placeholder shimmer. */
+.skeleton {
+  background: linear-gradient(90deg, var(--hover) 25%, var(--line) 50%, var(--hover) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+@keyframes skeleton-shimmer {
+  to { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+/* Standard icon button — 32px min hit target, CSS hover/focus (#8). */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 32px; min-height: 32px; padding: 6px;
+  border-radius: var(--radius-sm); border: 1px solid transparent;
+  color: var(--muted); background: transparent; cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast),
+              border-color var(--transition-fast);
+}
+.icon-btn:hover { background: var(--hover); color: var(--ink); }
+.icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Dense variant for chips / table rows — 24px min. */
+.icon-btn-sm {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 24px; min-height: 24px; padding: 3px;
+  border-radius: var(--radius-sm); border: 1px solid transparent;
+  color: var(--muted); background: transparent; cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.icon-btn-sm:hover { background: var(--hover); color: var(--ink); }
+.icon-btn-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
