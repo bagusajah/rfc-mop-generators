@@ -1,3 +1,5 @@
+<img width="1920" height="1958" alt="screencapture-rnd-id-8084-2026-10-30-17_42_17" src="https://github.com/user-attachments/assets/3a544263-6d54-42a6-8abf-b8056b99f22c" />
+
 # RFC & MOP Generators
 
 Two SRE tools in one repo, sharing a domain-neutral **core**:
